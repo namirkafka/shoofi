@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سياسة الخصوصية - شوفي</title>
+    <title>سياسة الخصوصية - شوفي | Privacy Policy - Shoofi</title>
     <style>
         * {
             margin: 0;
@@ -12,123 +12,185 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
-            background: #f8f9fa;
+            background-color: #f8f9fa;
+            direction: rtl;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-        }
-
-        .content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .section {
+            padding: 30px 0;
+            border-bottom: 3px solid #007bff;
             margin-bottom: 30px;
         }
 
-        .section:last-child {
-            margin-bottom: 0;
-        }
-
-        h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-
-        p {
-            margin-bottom: 15px;
-            color: #4a5568;
-        }
-
-        ul {
-            list-style: none;
-            margin-bottom: 15px;
-        }
-
-        li {
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #007bff;
             margin-bottom: 10px;
-            padding-right: 20px;
-            position: relative;
         }
 
-        li:before {
-            content: "•";
-            color: #667eea;
-            position: absolute;
-            right: 0;
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
         }
 
-        .contact {
-            background: #e3f2fd;
+        .language-toggle {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .lang-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .lang-btn:hover, .lang-btn.active {
+            background: #0056b3;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .section h2 {
+            color: #007bff;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .section h3 {
+            color: #333;
+            margin: 20px 0 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .section p, .section li {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        .section ul {
+            margin: 10px 0 10px 30px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ffeaa7;
+            margin: 15px 0;
+        }
+
+        .contact-info {
+            background: #e7f3ff;
             padding: 20px;
             border-radius: 10px;
-            margin-top: 30px;
-        }
-
-        .contact p {
-            margin-bottom: 10px;
-        }
-
-        .contact a {
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        .contact a:hover {
-            text-decoration: underline;
-        }
-
-        .footer {
+            border: 2px solid #007bff;
             text-align: center;
-            margin-top: 40px;
-            color: #718096;
-            font-size: 0.9em;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px 15px;
-            }
+        .deletion-form {
+            background: #fff5f5;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #dc3545;
+            margin-top: 20px;
+        }
 
-            .header {
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #c82333;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .english {
+            display: none;
+            direction: ltr;
+        }
+
+        .english.active {
+            display: block;
+        }
+
+        .arabic.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
                 padding: 15px;
             }
-
-            .header h1 {
-                font-size: 2em;
+            
+            .logo {
+                font-size: 2rem;
             }
-
-            .content {
-                padding: 20px;
+            
+            .section {
+                padding: 15px;
             }
         }
     </style>
@@ -136,64 +198,416 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>سياسة الخصوصية</h1>
-            <p>تطبيق شوفي - السوق الموثوق</p>
+            <div class="logo">شوفي | Shoofi</div>
+            <div class="subtitle">سياسة الخصوصية وحذف البيانات | Privacy Policy & Data Deletion</div>
         </div>
 
-        <div class="content">
+        <div class="language-toggle">
+            <button class="lang-btn active" onclick="showArabic()">العربية</button>
+            <button class="lang-btn" onclick="showEnglish()">English</button>
+        </div>
+
+        <!-- Arabic Version -->
+        <div class="arabic active">
             <div class="section">
-                <h2>مقدمة</h2>
-                <p>تطبيق شوفي يحترم خصوصية مستخدميه ويهتم بحماية بياناتهم الشخصية. هذه السياسة توضح كيفية جمع واستخدام المعلومات في تطبيقنا.</p>
+                <h2>🔒 سياسة الخصوصية - تطبيق شوفي</h2>
+                <p><strong>تاريخ السريان:</strong> 30 مايو 2025</p>
+                <p>مرحباً بكم في تطبيق "شوفي" - منصة السوق المحلي. نحن ملتزمون بحماية خصوصيتكم وبياناتكم الشخصية. توضح هذه السياسة كيفية جمع واستخدام وحماية معلوماتكم.</p>
             </div>
 
             <div class="section">
-                <h2>البيانات التي نجمعها</h2>
+                <h2>📊 البيانات التي نجمعها</h2>
+                
+                <h3>1. معلومات الحساب:</h3>
                 <ul>
-                    <li>معلومات الحساب (البريد الإلكتروني، رقم الهاتف)</li>
-                    <li>معلومات الملف الشخصي (الاسم، الصورة الشخصية)</li>
-                    <li>معلومات الإعلانات (الصور، الوصف، السعر)</li>
-                    <li>معلومات الموقع (اختياري)</li>
+                    <li><strong>تسجيل الدخول عبر فيسبوك:</strong> الاسم، البريد الإلكتروني، المعرف الفريد</li>
+                    <li><strong>المعلومات الإضافية:</strong> رقم الهاتف، المحافظة (الموقع)</li>
+                    <li><strong>معلومات الجهاز:</strong> معرف الجهاز، إعدادات الإشعارات</li>
+                </ul>
+
+                <h3>2. محتوى المستخدم:</h3>
+                <ul>
+                    <li>الإعلانات والمنتجات المنشورة</li>
+                    <li>الصور والأوصاف</li>
+                    <li>الرسائل والمحادثات</li>
+                    <li>التقييمات والتعليقات</li>
+                </ul>
+
+                <h3>3. بيانات الاستخدام:</h3>
+                <ul>
+                    <li>سجلات النشاط داخل التطبيق</li>
+                    <li>إحصائيات التفاعل</li>
+                    <li>معلومات تقنية عن الجهاز والمتصفح</li>
                 </ul>
             </div>
 
             <div class="section">
-                <h2>كيف نستخدم البيانات</h2>
+                <h2>🎯 كيف نستخدم بياناتكم</h2>
                 <ul>
-                    <li>لتوفير خدمات التطبيق</li>
-                    <li>لتحسين تجربة المستخدم</li>
-                    <li>للتواصل مع المستخدمين</li>
-                    <li>لحماية أمن التطبيق</li>
+                    <li><strong>تشغيل الخدمة:</strong> إدارة الحسابات وعرض الإعلانات</li>
+                    <li><strong>التواصل:</strong> إرسال الإشعارات والرسائل المهمة</li>
+                    <li><strong>الأمان:</strong> مراجعة المحتوى ومنع الاحتيال</li>
+                    <li><strong>التحسين:</strong> تطوير ميزات جديدة وتحسين الخدمة</li>
+                    <li><strong>الدعم:</strong> تقديم المساعدة الفنية والرد على الاستفسارات</li>
                 </ul>
             </div>
 
             <div class="section">
-                <h2>حماية البيانات</h2>
+                <h2>🤝 مشاركة البيانات</h2>
+                <p><strong>نحن لا نبيع بياناتكم الشخصية أبداً.</strong> قد نشارك المعلومات في الحالات التالية:</p>
                 <ul>
-                    <li>نستخدم تشفير البيانات</li>
-                    <li>نحتفظ بالبيانات في خوادم آمنة</li>
-                    <li>نتبع أفضل ممارسات الأمان</li>
+                    <li><strong>مقدمو الخدمة:</strong> Firebase، Facebook SDK (لأغراض تقنية محددة)</li>
+                    <li><strong>المتطلبات القانونية:</strong> عند طلب السلطات المختصة</li>
+                    <li><strong>حماية الحقوق:</strong> لحماية أمان وحقوق المستخدمين</li>
+                    <li><strong>المعلومات العامة:</strong> الإعلانات المنشورة (بدون معلومات شخصية حساسة)</li>
                 </ul>
             </div>
 
             <div class="section">
-                <h2>حقوق المستخدم</h2>
+                <h2>🔐 أمان البيانات</h2>
                 <ul>
-                    <li>يمكنك طلب نسخة من بياناتك</li>
-                    <li>يمكنك حذف حسابك</li>
-                    <li>يمكنك تعديل معلوماتك</li>
+                    <li><strong>التشفير:</strong> جميع البيانات مشفرة أثناء النقل والتخزين</li>
+                    <li><strong>التحكم في الوصول:</strong> وصول محدود للموظفين المخولين فقط</li>
+                    <li><strong>المراقبة:</strong> مراقبة مستمرة للأنشطة المشبوهة</li>
+                    <li><strong>النسخ الاحتياطية:</strong> نسخ آمنة ومشفرة</li>
+                    <li><strong>البنية التحتية:</strong> خوادم آمنة معتمدة دولياً</li>
                 </ul>
             </div>
 
-            <div class="contact">
-                <h2>تواصل معنا</h2>
-                <p>للمزيد من المعلومات حول سياسة الخصوصية، يمكنك التواصل معنا عبر:</p>
-                <p>البريد الإلكتروني: <a href="mailto:namirkhabazy@outlook.com">support@shoofi.app</a></p>
+            <div class="section">
+                <h2>⏰ الاحتفاظ بالبيانات</h2>
+                <ul>
+                    <li><strong>الحسابات النشطة:</strong> طوال فترة استخدام الخدمة</li>
+                    <li><strong>الحسابات المحذوفة:</strong> 30 يوماً للمراجعة ثم الحذف النهائي</li>
+                    <li><strong>الإعلانات:</strong> تُحذف مع حذف الحساب أو بناءً على طلبكم</li>
+                    <li><strong>سجلات النظام:</strong> 90 يوماً لأغراض الأمان والتشخيص</li>
+                    <li><strong>البيانات القانونية:</strong> حسب المتطلبات القانونية المحلية</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>👤 حقوقكم</h2>
+                <ul>
+                    <li><strong>الوصول:</strong> الحصول على نسخة من بياناتكم</li>
+                    <li><strong>التصحيح:</strong> تحديث المعلومات غير الصحيحة</li>
+                    <li><strong>الحذف:</strong> طلب حذف بياناتكم نهائياً</li>
+                    <li><strong>التحكم:</strong> إدارة إعدادات الخصوصية والإشعارات</li>
+                    <li><strong>النقل:</strong> تصدير بياناتكم بتنسيق قابل للقراءة</li>
+                    <li><strong>الاعتراض:</strong> رفض استخدام بياناتكم لأغراض معينة</li>
+                </ul>
+            </div>
+
+            <div class="highlight">
+                <h3>🚨 إشعار مهم للمستخدمين الأوروبيين (GDPR)</h3>
+                <p>وفقاً للائحة العامة لحماية البيانات، لديكم حقوق إضافية في التحكم ببياناتكم. يمكنكم ممارسة هذه الحقوق في أي وقت من خلال التواصل معنا.</p>
+            </div>
+
+            <div class="section">
+                <h2>🍪 ملفات تعريف الارتباط</h2>
+                <p>نستخدم تقنيات مشابهة لملفات تعريف الارتباط لـ:</p>
+                <ul>
+                    <li>حفظ تفضيلات المستخدم</li>
+                    <li>تحسين أداء التطبيق</li>
+                    <li>تحليل استخدام الخدمة</li>
+                    <li>توفير ميزات أمان إضافية</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>👶 حماية الأطفال</h2>
+                <p>تطبيق شوفي مخصص للمستخدمين بعمر 13 سنة فما فوق. نحن لا نجمع عمداً معلومات شخصية من الأطفال دون سن 13 عاماً. إذا علمنا بجمع مثل هذه المعلومات، سنحذفها فوراً.</p>
+            </div>
+
+            <div class="section">
+                <h2>🔄 تحديثات السياسة</h2>
+                <p>قد نحدث هذه السياسة من وقت لآخر. سنخطركم بأي تغييرات مهمة عبر:</p>
+                <ul>
+                    <li>إشعار داخل التطبيق</li>
+                    <li>رسالة بريد إلكتروني</li>
+                    <li>تحديث تاريخ "آخر تعديل" في أعلى هذه الصفحة</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🗑️ حذف البيانات والحساب</h2>
+                <p>يمكنكم طلب حذف حسابكم وجميع بياناتكم المرتبطة به في أي وقت. استخدموا النموذج أدناه أو تواصلوا معنا مباشرة.</p>
+                
+                <div class="deletion-form">
+                    <h3>📝 نموذج طلب حذف البيانات</h3>
+                    <form id="deletionForm">
+                        <div class="form-group">
+                            <label for="userEmail">البريد الإلكتروني المسجل:</label>
+                            <input type="email" id="userEmail" name="userEmail" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phoneNumber">رقم الهاتف (اختياري):</label>
+                            <input type="tel" id="phoneNumber" name="phoneNumber">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reason">سبب الحذف (اختياري):</label>
+                            <textarea id="reason" name="reason" rows="3" placeholder="يساعدنا فهم أسباب المغادرة في تحسين خدماتنا"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" required> أؤكد أنني أرغب في حذف حسابي وجميع بياناتي نهائياً (هذا الإجراء لا يمكن التراجع عنه)
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn">إرسال طلب الحذف</button>
+                    </form>
+                    
+                    <div class="highlight" style="margin-top: 15px;">
+                        <p><strong>ملاحظة:</strong> بعد تقديم الطلب، ستتلقون رسالة تأكيد وسيتم حذف جميع بياناتكم خلال 30 يوماً. لن تتمكنوا من استرداد الحساب أو البيانات بعد الحذف النهائي.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <h2>📞 تواصل معنا</h2>
+                <p><strong>للاستفسارات حول الخصوصية أو طلبات حذف البيانات:</strong></p>
+                <p>📧 البريد الإلكتروني: <a href="mailto:privacy@shoofi.app">privacy@shoofi.app</a></p>
+                <p>📧 الدعم العام: <a href="mailto:support@shoofi.app">support@shoofi.app</a></p>
+                <p>📱 التطبيق: قسم "الإعدادات" > "الخصوصية والأمان"</p>
+                <p>⏰ وقت الرد: 24-48 ساعة للاستفسارات العادية، فوري للطوارئ</p>
             </div>
         </div>
 
-        <div class="footer">
-            <p>© 2024 شوفي - جميع الحقوق محفوظة</p>
+        <!-- English Version -->
+        <div class="english">
+            <div class="section">
+                <h2>🔒 Privacy Policy - Shoofi App</h2>
+                <p><strong>Effective Date:</strong> May 30, 2025</p>
+                <p>Welcome to "Shoofi" - your local marketplace platform. We are committed to protecting your privacy and personal data. This policy explains how we collect, use, and protect your information.</p>
+            </div>
+
+            <div class="section">
+                <h2>📊 Data We Collect</h2>
+                
+                <h3>1. Account Information:</h3>
+                <ul>
+                    <li><strong>Facebook Login:</strong> Name, email address, unique identifier</li>
+                    <li><strong>Additional Information:</strong> Phone number, governorate (location)</li>
+                    <li><strong>Device Information:</strong> Device ID, notification settings</li>
+                </ul>
+
+                <h3>2. User Content:</h3>
+                <ul>
+                    <li>Listings and products posted</li>
+                    <li>Images and descriptions</li>
+                    <li>Messages and conversations</li>
+                    <li>Reviews and comments</li>
+                </ul>
+
+                <h3>3. Usage Data:</h3>
+                <ul>
+                    <li>App activity logs</li>
+                    <li>Interaction statistics</li>
+                    <li>Technical information about device and browser</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🎯 How We Use Your Data</h2>
+                <ul>
+                    <li><strong>Service Operation:</strong> Account management and listing display</li>
+                    <li><strong>Communication:</strong> Sending notifications and important messages</li>
+                    <li><strong>Security:</strong> Content moderation and fraud prevention</li>
+                    <li><strong>Improvement:</strong> Developing new features and service enhancement</li>
+                    <li><strong>Support:</strong> Providing technical assistance and answering inquiries</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🤝 Data Sharing</h2>
+                <p><strong>We never sell your personal data.</strong> We may share information in the following cases:</p>
+                <ul>
+                    <li><strong>Service Providers:</strong> Firebase, Facebook SDK (for specific technical purposes)</li>
+                    <li><strong>Legal Requirements:</strong> When requested by competent authorities</li>
+                    <li><strong>Rights Protection:</strong> To protect user safety and rights</li>
+                    <li><strong>Public Information:</strong> Published listings (without sensitive personal information)</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🔐 Data Security</h2>
+                <ul>
+                    <li><strong>Encryption:</strong> All data encrypted in transit and at rest</li>
+                    <li><strong>Access Control:</strong> Limited access to authorized personnel only</li>
+                    <li><strong>Monitoring:</strong> Continuous monitoring for suspicious activities</li>
+                    <li><strong>Backups:</strong> Secure and encrypted backups</li>
+                    <li><strong>Infrastructure:</strong> Internationally certified secure servers</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>⏰ Data Retention</h2>
+                <ul>
+                    <li><strong>Active Accounts:</strong> Duration of service use</li>
+                    <li><strong>Deleted Accounts:</strong> 30 days for review then permanent deletion</li>
+                    <li><strong>Listings:</strong> Deleted with account deletion or upon request</li>
+                    <li><strong>System Logs:</strong> 90 days for security and diagnostic purposes</li>
+                    <li><strong>Legal Data:</strong> According to local legal requirements</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>👤 Your Rights</h2>
+                <ul>
+                    <li><strong>Access:</strong> Get a copy of your data</li>
+                    <li><strong>Correction:</strong> Update incorrect information</li>
+                    <li><strong>Deletion:</strong> Request permanent deletion of your data</li>
+                    <li><strong>Control:</strong> Manage privacy and notification settings</li>
+                    <li><strong>Portability:</strong> Export your data in readable format</li>
+                    <li><strong>Objection:</strong> Refuse use of your data for specific purposes</li>
+                </ul>
+            </div>
+
+            <div class="highlight">
+                <h3>🚨 Important Notice for European Users (GDPR)</h3>
+                <p>According to the General Data Protection Regulation, you have additional rights to control your data. You can exercise these rights at any time by contacting us.</p>
+            </div>
+
+            <div class="section">
+                <h2>🍪 Cookies and Similar Technologies</h2>
+                <p>We use cookie-like technologies for:</p>
+                <ul>
+                    <li>Saving user preferences</li>
+                    <li>Improving app performance</li>
+                    <li>Analyzing service usage</li>
+                    <li>Providing additional security features</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>👶 Children's Protection</h2>
+                <p>Shoofi app is intended for users aged 13 and above. We do not knowingly collect personal information from children under 13. If we become aware of such collection, we will delete it immediately.</p>
+            </div>
+
+            <div class="section">
+                <h2>🔄 Policy Updates</h2>
+                <p>We may update this policy from time to time. We will notify you of any significant changes through:</p>
+                <ul>
+                    <li>In-app notification</li>
+                    <li>Email message</li>
+                    <li>Updating the "last modified" date at the top of this page</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🗑️ Data and Account Deletion</h2>
+                <p>You can request deletion of your account and all associated data at any time. Use the form below or contact us directly.</p>
+                
+                <div class="deletion-form">
+                    <h3>📝 Data Deletion Request Form</h3>
+                    <form id="deletionFormEn">
+                        <div class="form-group">
+                            <label for="userEmailEn">Registered Email:</label>
+                            <input type="email" id="userEmailEn" name="userEmailEn" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phoneNumberEn">Phone Number (optional):</label>
+                            <input type="tel" id="phoneNumberEn" name="phoneNumberEn">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reasonEn">Reason for Deletion (optional):</label>
+                            <textarea id="reasonEn" name="reasonEn" rows="3" placeholder="Understanding why you're leaving helps us improve our services"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" required> I confirm that I want to permanently delete my account and all my data (this action cannot be undone)
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn">Submit Deletion Request</button>
+                    </form>
+                    
+                    <div class="highlight" style="margin-top: 15px;">
+                        <p><strong>Note:</strong> After submitting the request, you will receive a confirmation message and all your data will be deleted within 30 days. You will not be able to recover the account or data after permanent deletion.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <h2>📞 Contact Us</h2>
+                <p><strong>For privacy inquiries or data deletion requests:</strong></p>
+                <p>📧 Email: <a href="mailto:privacy@shoofi.app">privacy@shoofi.app</a></p>
+                <p>📧 General Support: <a href="mailto:support@shoofi.app">support@shoofi.app</a></p>
+                <p>📱 App: "Settings" > "Privacy & Security" section</p>
+                <p>⏰ Response Time: 24-48 hours for regular inquiries, immediate for emergencies</p>
+            </div>
+        </div>
+
+        <div class="last-updated">
+            <p>آخر تحديث: 30 مايو 2025 | Last Updated: May 30, 2025</p>
+            <p>© 2025 Shoofi. جميع الحقوق محفوظة | All Rights Reserved</p>
         </div>
     </div>
+
+    <script>
+        function showArabic() {
+            document.querySelector('.arabic').classList.add('active');
+            document.querySelector('.english').classList.remove('active');
+            document.querySelectorAll('.lang-btn')[0].classList.add('active');
+            document.querySelectorAll('.lang-btn')[1].classList.remove('active');
+            document.body.style.direction = 'rtl';
+        }
+
+        function showEnglish() {
+            document.querySelector('.english').classList.add('active');
+            document.querySelector('.arabic').classList.remove('active');
+            document.querySelectorAll('.lang-btn')[1].classList.add('active');
+            document.querySelectorAll('.lang-btn')[0].classList.remove('active');
+            document.body.style.direction = 'ltr';
+        }
+
+        // Handle form submissions
+        document.getElementById('deletionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleDeletionRequest(this, 'ar');
+        });
+
+        document.getElementById('deletionFormEn').addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleDeletionRequest(this, 'en');
+        });
+
+        function handleDeletionRequest(form, language) {
+            const formData = new FormData(form);
+            const email = formData.get(language === 'ar' ? 'userEmail' : 'userEmailEn');
+            
+            const messages = {
+                ar: {
+                    success: 'تم إرسال طلب الحذف بنجاح. ستتلقى رسالة تأكيد قريباً.',
+                    error: 'حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى أو التواصل معنا مباشرة.'
+                },
+                en: {
+                    success: 'Deletion request sent successfully. You will receive a confirmation message soon.',
+                    error: 'An error occurred sending the request. Please try again or contact us directly.'
+                }
+            };
+
+            // Simulate form submission
+            const submitBtn = form.querySelector('.btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = language === 'ar' ? 'جاري الإرسال...' : 'Sending...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                alert(messages[language].success);
+                form.reset();
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 2000);
+        }
+
+        // Initialize with Arabic
+        showArabic();
+    </script>
 </body>
 </html>
