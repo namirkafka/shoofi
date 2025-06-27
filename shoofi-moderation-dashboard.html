@@ -163,16 +163,7 @@
             margin: 20px;
         }
 
-        .debug {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
+
 
         .moderation-section {
             background: rgba(255, 255, 255, 0.1);
@@ -364,11 +355,6 @@
                 <i class="fab fa-google"></i>
                 تسجيل الدخول بـ Google
             </button>
-
-            <div class="debug">
-                <strong>Debug Log:</strong>
-                <div id="debugLog"></div>
-            </div>
         </div>
     </div>
 
@@ -449,18 +435,14 @@
         const googleBtn = document.getElementById('googleBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const status = document.getElementById('status');
-        const debugLog = document.getElementById('debugLog');
         const userInfo = document.getElementById('userInfo');
 
         let currentUser = null;
         let userProfile = null;
 
-        // Debug logging
+        // Simple logging for development (console only)
         function log(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            debugLog.innerHTML += `[${timestamp}] ${message}<br>`;
-            debugLog.scrollTop = debugLog.scrollHeight;
-            console.log(message);
+            console.log(`[Shoofi Admin] ${message}`);
         }
 
         function showStatus(message, type) {
@@ -742,16 +724,36 @@
              }
          }
 
+        // Session persistence
+        function saveSession(session) {
+            if (session) {
+                localStorage.setItem('shoofi_admin_session', JSON.stringify({
+                    access_token: session.access_token,
+                    refresh_token: session.refresh_token,
+                    expires_at: session.expires_at,
+                    user: session.user
+                }));
+                log('Session saved to localStorage');
+            }
+        }
+
+        function clearSession() {
+            localStorage.removeItem('shoofi_admin_session');
+            log('Session cleared from localStorage');
+        }
+
         // Handle authentication
         async function handleAuth(session) {
             if (!session || !session.user) {
                 log('No session found');
+                clearSession();
                 showLogin();
                 return;
             }
 
             log('Session found for: ' + session.user.email);
             currentUser = session.user;
+            saveSession(session);
 
             // Check user role
             userProfile = await checkUserRole(session.user.id);
@@ -829,6 +831,7 @@
         // Logout
         logoutBtn.addEventListener('click', async () => {
             log('Logging out...');
+            clearSession();
             await supabase.auth.signOut();
         });
 
@@ -841,6 +844,7 @@
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
                 userProfile = null;
+                clearSession();
                 showLogin();
             }
         });
@@ -861,9 +865,50 @@
                  await new Promise(resolve => setTimeout(resolve, 3000));
              }
              
-             // Check for existing session
-             const { data: { session } } = await supabase.auth.getSession();
-             await handleAuth(session);
+             try {
+                 // Check for existing session
+                 const { data: { session } } = await supabase.auth.getSession();
+                 
+                 if (session) {
+                     log('Active session found');
+                     await handleAuth(session);
+                 } else {
+                     // Try to recover from localStorage
+                     const savedSession = localStorage.getItem('shoofi_admin_session');
+                     if (savedSession) {
+                         try {
+                             const sessionData = JSON.parse(savedSession);
+                             // Check if session is still valid (not expired)
+                             if (sessionData.expires_at && Date.now() < sessionData.expires_at * 1000) {
+                                 log('Attempting to recover session from storage');
+                                 // Try to refresh the session
+                                 const { data, error } = await supabase.auth.refreshSession({
+                                     refresh_token: sessionData.refresh_token
+                                 });
+                                 
+                                 if (data.session && !error) {
+                                     log('Session recovered successfully');
+                                     await handleAuth(data.session);
+                                     return;
+                                 } else {
+                                     log('Failed to recover session: ' + (error?.message || 'Unknown error'));
+                                 }
+                             } else {
+                                 log('Stored session expired');
+                             }
+                         } catch (e) {
+                             log('Error parsing stored session: ' + e.message);
+                         }
+                         clearSession();
+                     }
+                     
+                     log('No valid session found - showing login');
+                     showLogin();
+                 }
+             } catch (error) {
+                 log('Error during initialization: ' + error.message);
+                 showLogin();
+             }
          }
 
         // Start
