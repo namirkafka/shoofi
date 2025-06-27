@@ -1163,14 +1163,8 @@
                 
                 if (userProfile.role === 'user') {
                     showStatus('تم إنشاء حسابك بنجاح! لكن لا يمكنك الوصول إلى لوحة الإدارة', 'info');
-                    setTimeout(() => {
-                        showStatus('حسابك بحاجة إلى صلاحيات إدارية. تواصل مع: admin@shoofi.com', 'info');
-                    }, 3000);
                 } else {
                     showStatus(`حسابك موجود لكن لا يملك صلاحيات الإدارة. دورك الحالي: ${userProfile.role}`, 'error');
-                    setTimeout(() => {
-                        showStatus('لطلب ترقية الصلاحيات، يرجى التواصل مع: admin@shoofi.com', 'info');
-                    }, 3000);
                 }
                 
                 // Sign out after showing message
