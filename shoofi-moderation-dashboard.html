@@ -1104,33 +1104,28 @@
              );
 
              if (shouldRemoveFromView) {
-                 // Animate card removal
-                 card.style.transform = 'scale(0.95)';
-                 card.style.opacity = '0.5';
-                 card.style.transition = 'all 0.3s ease';
+                 // FAST DISSOLVE ANIMATION
+                 card.style.transition = 'all 0.15s ease-out';
+                 card.style.transform = 'scale(0.9)';
+                 card.style.opacity = '0';
+                 card.style.filter = 'blur(2px)';
                  
                  setTimeout(() => {
-                     // Add success animation before removal
-                     card.style.transform = 'translateX(-100%)';
-                     card.style.opacity = '0';
+                     card.remove();
                      
-                     setTimeout(() => {
-                         card.remove();
-                         
-                         // Check if grid is now empty
-                         const remainingCards = document.querySelectorAll('.listing-card');
-                         if (remainingCards.length === 0) {
-                             const container = document.getElementById('listingsContainer');
-                             container.innerHTML = `
-                                 <div class="no-listings">
-                                     <i class="fas fa-check-circle" style="color: #28a745;"></i><br>
-                                     تم! لا توجد إعلانات ${getFilterText(currentFilter)}
-                                     <br><small>جميع الإعلانات تم التعامل معها</small>
-                                 </div>
-                             `;
-                         }
-                     }, 300);
-                 }, 100);
+                     // Check if grid is now empty
+                     const remainingCards = document.querySelectorAll('.listing-card');
+                     if (remainingCards.length === 0) {
+                         const container = document.getElementById('listingsContainer');
+                         container.innerHTML = `
+                             <div class="no-listings">
+                                 <i class="fas fa-check-circle" style="color: #28a745;"></i><br>
+                                 تم! لا توجد إعلانات ${getFilterText(currentFilter)}
+                                 <br><small>جميع الإعلانات تم التعامل معها</small>
+                             </div>
+                         `;
+                     }
+                 }, 150);
              } else {
                  // Card stays in current view, just update it
                  // Update status badge
@@ -1168,13 +1163,14 @@
                      });
                  }
 
-                 // Add visual feedback
-                 card.style.transform = 'scale(1.02)';
-                 card.style.boxShadow = '0 8px 32px rgba(52, 152, 219, 0.3)';
+                 // Add fast visual feedback
+                 card.style.transition = 'all 0.1s ease-out';
+                 card.style.transform = 'scale(1.03)';
+                 card.style.boxShadow = '0 8px 32px rgba(52, 152, 219, 0.4)';
                  setTimeout(() => {
                      card.style.transform = '';
                      card.style.boxShadow = '';
-                 }, 300);
+                 }, 100);
              }
          }
 
