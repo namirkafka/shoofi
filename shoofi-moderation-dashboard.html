@@ -90,6 +90,33 @@
             border: 1px solid #28a745;
         }
 
+        .info {
+            background: rgba(23, 162, 184, 0.3);
+            border: 1px solid #17a2b8;
+        }
+
+        .warning-box {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            color: #fff;
+        }
+
+        .warning-box i {
+            color: #ffc107;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .warning-box p {
+            margin: 8px 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
         .dashboard {
             display: none;
             padding: 20px 0;
@@ -349,6 +376,14 @@
         <div class="login-box">
             <h2><i class="fas fa-shield-alt"></i> دخول المدير</h2>
             
+            <div class="warning-box">
+                <i class="fas fa-info-circle"></i>
+                <p><strong>معلومات مهمة:</strong></p>
+                <p>• هذه اللوحة مخصصة للإداريين والمشرفين المعتمدين</p>
+                <p>• إذا كانت هذه أول مرة تسجل دخولك، سيتم إنشاء حساب جديد لك</p>
+                <p>• لطلب صلاحيات الإدارة، تواصل مع: <strong>admin@shoofi.com</strong></p>
+            </div>
+            
             <div id="status" class="status" style="display: none;"></div>
             
             <button id="googleBtn" class="google-btn">
@@ -455,8 +490,8 @@
             status.style.display = 'none';
         }
 
-        // Check user role from database
-        async function checkUserRole(userId) {
+        // Check user role from database or create profile if doesn't exist
+        async function checkUserRole(userId, userEmail, userFullName) {
             try {
                 log('Checking user role for: ' + userId);
                 
@@ -466,7 +501,11 @@
                     .eq('id', userId)
                     .single();
 
-                if (error) {
+                if (error && error.code === 'PGRST116') {
+                    // Profile doesn't exist, create one
+                    log('No profile found, creating new profile for: ' + userEmail);
+                    return await createUserProfile(userId, userEmail, userFullName);
+                } else if (error) {
                     log('Error fetching profile: ' + error.message);
                     return null;
                 }
@@ -475,6 +514,39 @@
                 return data;
             } catch (error) {
                 log('Exception checking user role: ' + error.message);
+                return null;
+            }
+        }
+
+        // Create new user profile with default role
+        async function createUserProfile(userId, userEmail, userFullName) {
+            try {
+                log('Creating new profile for user: ' + userEmail);
+                
+                const newProfile = {
+                    id: userId,
+                    email: userEmail,
+                    full_name: userFullName || userEmail.split('@')[0],
+                    role: 'user', // Default role - you can change this later
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .insert([newProfile])
+                    .select()
+                    .single();
+
+                if (error) {
+                    log('Error creating profile: ' + error.message);
+                    return null;
+                }
+
+                log('Profile created successfully: ' + JSON.stringify(data));
+                return data;
+            } catch (error) {
+                log('Exception creating profile: ' + error.message);
                 return null;
             }
         }
@@ -755,20 +827,43 @@
             currentUser = session.user;
             saveSession(session);
 
-            // Check user role
-            userProfile = await checkUserRole(session.user.id);
+            // Check user role (will create profile if doesn't exist)
+            userProfile = await checkUserRole(
+                session.user.id, 
+                session.user.email, 
+                session.user.user_metadata?.full_name
+            );
             
             if (!userProfile) {
-                log('No profile found in database');
-                showStatus('لم يتم العثور على ملف المستخدم في قاعدة البيانات', 'error');
-                await supabase.auth.signOut();
+                log('Failed to create or fetch profile for user: ' + session.user.email);
+                showStatus('حدث خطأ في إنشاء الملف الشخصي. يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني.', 'error');
+                
+                // Sign out after showing message
+                setTimeout(async () => {
+                    await supabase.auth.signOut();
+                }, 4000);
                 return;
             }
 
             if (!isAdminOrModerator(userProfile.role)) {
-                log('User not authorized - role: ' + userProfile.role);
-                showStatus('ليس لديك صلاحية للوصول إلى لوحة الإدارة', 'error');
-                await supabase.auth.signOut();
+                log('User not authorized - role: ' + (userProfile.role || 'none') + ' for user: ' + session.user.email);
+                
+                if (userProfile.role === 'user') {
+                    showStatus('تم إنشاء حسابك بنجاح! دورك الحالي: مستخدم عادي', 'info');
+                    setTimeout(() => {
+                        showStatus('لطلب صلاحيات الإدارة أو الإشراف، يرجى التواصل مع: admin@shoofi.com', 'info');
+                    }, 3000);
+                } else {
+                    showStatus(`عذراً، حسابك لا يملك صلاحيات الإدارة. دورك الحالي: ${userProfile.role}`, 'error');
+                    setTimeout(() => {
+                        showStatus('لطلب ترقية الصلاحيات، يرجى التواصل مع: admin@shoofi.com', 'info');
+                    }, 3000);
+                }
+                
+                // Sign out after showing message
+                setTimeout(async () => {
+                    await supabase.auth.signOut();
+                }, 6000);
                 return;
             }
 
