@@ -1087,53 +1087,95 @@
 
          // FAST UPDATE - Enhanced moderation functions with instant UI updates
          
-         // Helper function to update listing card in place
+         // Helper function to update listing card and handle grid movement
          function updateListingInUI(listingId, newStatus) {
              const card = document.querySelector(`[data-id="${listingId}"]`);
              if (!card) return;
 
-             // Update status badge
-             const statusBadge = card.querySelector('.listing-status');
-             if (statusBadge) {
-                 statusBadge.className = `listing-status status-${newStatus}`;
-                 statusBadge.textContent = getStatusText(newStatus);
-             }
+             // Get current active tab to determine if card should be removed
+             const activeTab = document.querySelector('.tab-btn.active');
+             const currentFilter = activeTab ? activeTab.dataset.status : 'pending';
+             
+             // Check if card should be removed from current view
+             const shouldRemoveFromView = (
+                 (currentFilter === 'pending' && newStatus !== 'pending') ||
+                 (currentFilter === 'approved' && newStatus !== 'approved') ||
+                 (currentFilter === 'rejected' && newStatus !== 'rejected')
+             );
 
-             // Update action buttons
-             const actionsDiv = card.querySelector('.listing-actions');
-             if (actionsDiv) {
-                 actionsDiv.innerHTML = newStatus === 'pending' ? `
-                     <button class="action-btn approve-btn" data-action="approve" data-id="${listingId}">
-                         <i class="fas fa-check"></i> قبول
-                     </button>
-                     <button class="action-btn reject-btn" data-action="reject" data-id="${listingId}">
-                         <i class="fas fa-times"></i> رفض
-                     </button>
-                     <button class="action-btn view-btn" data-action="view" data-id="${listingId}">
-                         <i class="fas fa-eye"></i> عرض
-                     </button>
-                 ` : `
-                     <button class="action-btn undo-btn" data-action="undo" data-id="${listingId}">
-                         <i class="fas fa-undo"></i> تراجع
-                     </button>
-                     <button class="action-btn view-btn" data-action="view" data-id="${listingId}">
-                         <i class="fas fa-eye"></i> عرض
-                     </button>
-                 `;
+             if (shouldRemoveFromView) {
+                 // Animate card removal
+                 card.style.transform = 'scale(0.95)';
+                 card.style.opacity = '0.5';
+                 card.style.transition = 'all 0.3s ease';
                  
-                 // Re-add event listeners
-                 actionsDiv.querySelectorAll('.action-btn').forEach(btn => {
-                     btn.addEventListener('click', handleAction);
-                 });
-             }
+                 setTimeout(() => {
+                     // Add success animation before removal
+                     card.style.transform = 'translateX(-100%)';
+                     card.style.opacity = '0';
+                     
+                     setTimeout(() => {
+                         card.remove();
+                         
+                         // Check if grid is now empty
+                         const remainingCards = document.querySelectorAll('.listing-card');
+                         if (remainingCards.length === 0) {
+                             const container = document.getElementById('listingsContainer');
+                             container.innerHTML = `
+                                 <div class="no-listings">
+                                     <i class="fas fa-check-circle" style="color: #28a745;"></i><br>
+                                     تم! لا توجد إعلانات ${getFilterText(currentFilter)}
+                                     <br><small>جميع الإعلانات تم التعامل معها</small>
+                                 </div>
+                             `;
+                         }
+                     }, 300);
+                 }, 100);
+             } else {
+                 // Card stays in current view, just update it
+                 // Update status badge
+                 const statusBadge = card.querySelector('.listing-status');
+                 if (statusBadge) {
+                     statusBadge.className = `listing-status status-${newStatus}`;
+                     statusBadge.textContent = getStatusText(newStatus);
+                 }
 
-             // Add visual feedback
-             card.style.transform = 'scale(1.02)';
-             card.style.boxShadow = '0 8px 32px rgba(52, 152, 219, 0.3)';
-             setTimeout(() => {
-                 card.style.transform = '';
-                 card.style.boxShadow = '';
-             }, 300);
+                 // Update action buttons
+                 const actionsDiv = card.querySelector('.listing-actions');
+                 if (actionsDiv) {
+                     actionsDiv.innerHTML = newStatus === 'pending' ? `
+                         <button class="action-btn approve-btn" data-action="approve" data-id="${listingId}">
+                             <i class="fas fa-check"></i> قبول
+                         </button>
+                         <button class="action-btn reject-btn" data-action="reject" data-id="${listingId}">
+                             <i class="fas fa-times"></i> رفض
+                         </button>
+                         <button class="action-btn view-btn" data-action="view" data-id="${listingId}">
+                             <i class="fas fa-eye"></i> عرض
+                         </button>
+                     ` : `
+                         <button class="action-btn undo-btn" data-action="undo" data-id="${listingId}">
+                             <i class="fas fa-undo"></i> تراجع
+                         </button>
+                         <button class="action-btn view-btn" data-action="view" data-id="${listingId}">
+                             <i class="fas fa-eye"></i> عرض
+                         </button>
+                     `;
+                     
+                     // Re-add event listeners
+                     actionsDiv.querySelectorAll('.action-btn').forEach(btn => {
+                         btn.addEventListener('click', handleAction);
+                     });
+                 }
+
+                 // Add visual feedback
+                 card.style.transform = 'scale(1.02)';
+                 card.style.boxShadow = '0 8px 32px rgba(52, 152, 219, 0.3)';
+                 setTimeout(() => {
+                     card.style.transform = '';
+                     card.style.boxShadow = '';
+                 }, 300);
+             }
          }
 
          // Helper function to update stats instantly
@@ -1172,6 +1214,15 @@
                  approved: 'مقبول',
                  rejected: 'مرفوض'
              }[status] || status;
+         }
+
+         function getFilterText(filter) {
+             return {
+                 pending: 'في الانتظار',
+                 approved: 'مقبولة',
+                 rejected: 'مرفوضة',
+                 all: ''
+             }[filter] || '';
          }
 
          // FAST Approve listing with instant UI update
