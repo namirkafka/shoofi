@@ -527,6 +527,15 @@
             googleBtn.innerHTML = '<i class="fab fa-google"></i>';
         }
 
+        function showProcessing() {
+            loginScreen.style.display = 'flex';
+            dashboardScreen.classList.remove('show');
+            
+            // Show processing state
+            googleBtn.disabled = true;
+            googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> معالجة...';
+        }
+
         function showDashboard() {
             loginScreen.style.display = 'none';
             dashboardScreen.classList.add('show');
@@ -574,6 +583,18 @@
             console.log('Initializing auth...');
 
             try {
+                // Check if we're returning from OAuth (has code or access_token in URL)
+                const urlParams = new URLSearchParams(window.location.search);
+                const hasOAuthParams = urlParams.has('code') || urlParams.has('access_token') || window.location.hash.includes('access_token');
+                
+                if (hasOAuthParams) {
+                    console.log('OAuth redirect detected, processing...');
+                    showLogin(); // Show login screen while processing
+                    
+                    // Wait a bit for Supabase to process the OAuth callback
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+
                 // Check for existing session
                 const { data: { session }, error } = await supabaseClient.auth.getSession();
                 
@@ -592,6 +613,11 @@
                         showDashboard();
                         loadStats();
                         showNotification('مرحباً ' + (session.user.user_metadata?.full_name || session.user.email), 'success');
+                        
+                        // Clean up URL parameters
+                        if (hasOAuthParams) {
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }
                     } else {
                         console.log('User not authorized, signing out');
                         await supabaseClient.auth.signOut();
