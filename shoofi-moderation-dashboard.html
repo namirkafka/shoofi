@@ -607,7 +607,13 @@
         const SUPABASE_URL = 'https://stlgfmopschgpcnqtwny.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdmbW9wc2NoZ3BjbnF0d255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzODQ3MDksImV4cCI6MjA2NDk2MDcwOX0.UoZFRPPKrS_q_h7OgVhPthdpi8ck7F1HfNQ3WLvLZxs';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true
+            }
+        });
 
         // DOM elements
         const loginScreen = document.getElementById('loginScreen');
@@ -735,21 +741,18 @@
                  clearInterval(sessionCheckInterval);
              }
              
-             // Check session every 5 minutes
+             // Check session every 10 minutes (less frequent)
              sessionCheckInterval = setInterval(async () => {
                  if (currentUser) {
                      log('Periodic session check...');
                      const { data: { session } } = await supabase.auth.getSession();
-                     if (session) {
-                         // Update saved session with fresh data
-                         saveSession(session);
-                     } else {
+                     if (!session) {
                          log('Session expired during periodic check');
                          clearInterval(sessionCheckInterval);
                          showLogin();
                      }
                  }
-             }, 5 * 60 * 1000); // 5 minutes
+             }, 10 * 60 * 1000); // 10 minutes
          }
 
          // Test database connection
@@ -1136,28 +1139,27 @@
              }
          }
 
-        // Session persistence
+        // Simple session tracking (Supabase handles the real persistence)
         function saveSession(session) {
-            if (session && session.access_token && session.refresh_token) {
+            if (session) {
                 try {
-                    const sessionData = {
-                        access_token: session.access_token,
-                        refresh_token: session.refresh_token,
-                        expires_at: session.expires_at,
-                        user: session.user,
-                        saved_at: Date.now()
-                    };
-                    localStorage.setItem('shoofi_admin_session', JSON.stringify(sessionData));
-                    log('Session saved to localStorage with expiry: ' + new Date(session.expires_at * 1000).toLocaleString());
+                    // Just save user info for quick access, let Supabase handle tokens
+                    localStorage.setItem('shoofi_user_info', JSON.stringify({
+                        user_id: session.user.id,
+                        email: session.user.email,
+                        logged_in: true,
+                        timestamp: Date.now()
+                    }));
+                    log('User info saved');
                 } catch (e) {
-                    log('Error saving session: ' + e.message);
+                    log('Error saving user info: ' + e.message);
                 }
             }
         }
 
         function clearSession() {
-            localStorage.removeItem('shoofi_admin_session');
-            log('Session cleared from localStorage');
+            localStorage.removeItem('shoofi_user_info');
+            log('User info cleared');
         }
 
         // Handle authentication
@@ -1296,27 +1298,7 @@
                 log('Page became visible, checking session...');
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) {
-                    log('Session lost, attempting to restore...');
-                    // Try to restore from localStorage
-                    const savedSession = localStorage.getItem('shoofi_admin_session');
-                    if (savedSession) {
-                        try {
-                            const sessionData = JSON.parse(savedSession);
-                            if (sessionData.expires_at && Date.now() < sessionData.expires_at * 1000) {
-                                const { data, error } = await supabase.auth.setSession({
-                                    access_token: sessionData.access_token,
-                                    refresh_token: sessionData.refresh_token
-                                });
-                                if (data.session && !error) {
-                                    log('Session restored on visibility change');
-                                    return;
-                                }
-                            }
-                        } catch (e) {
-                            log('Error restoring session on visibility change: ' + e.message);
-                        }
-                    }
-                    // If restoration failed, show login
+                    log('Session lost - redirecting to login');
                     showLogin();
                 }
             }
@@ -1339,45 +1321,14 @@
              }
              
              try {
-                 // Check for existing session
+                 // Let Supabase handle session persistence automatically
                  const { data: { session } } = await supabase.auth.getSession();
                  
                  if (session) {
-                     log('Active session found');
+                     log('Session found, checking validity...');
                      await handleAuth(session);
                  } else {
-                     // Try to recover from localStorage as fallback
-                     const savedSession = localStorage.getItem('shoofi_admin_session');
-                     if (savedSession) {
-                         try {
-                             const sessionData = JSON.parse(savedSession);
-                             // Check if session is still valid (not expired)
-                             if (sessionData.expires_at && Date.now() < sessionData.expires_at * 1000) {
-                                 log('Found valid saved session, attempting to restore...');
-                                 
-                                 // Try to set the session manually
-                                 const { data, error } = await supabase.auth.setSession({
-                                     access_token: sessionData.access_token,
-                                     refresh_token: sessionData.refresh_token
-                                 });
-                                 
-                                 if (data.session && !error) {
-                                     log('Session restored successfully');
-                                     await handleAuth(data.session);
-                                     return;
-                                 } else {
-                                     log('Failed to restore session: ' + (error?.message || 'Unknown error'));
-                                 }
-                             } else {
-                                 log('Saved session expired');
-                             }
-                         } catch (e) {
-                             log('Error parsing saved session: ' + e.message);
-                         }
-                         clearSession();
-                     }
-                     
-                     log('No valid session found - showing login');
+                     log('No session found - showing login');
                      showLogin();
                  }
              } catch (error) {
