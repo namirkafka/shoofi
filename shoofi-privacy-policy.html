@@ -414,14 +414,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Admin Configuration
-        const ADMIN_EMAILS = [
-            'namirkhabaza@gmail.com',
-            'admin@shoofi.com',
-            'namir@shoofi.com',
-            // Add more admin emails here
-        ];
-
+        // Role-Based Access Control Configuration
+        const ALLOWED_ROLES = ['admin', 'moderator'];
+        
         // Supabase Configuration
         const SUPABASE_URL = 'https://stlgfmopschgpcnqtwny.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bGdmbW9wc2NoZ3BjbnF0d255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzODQ3MDksImV4cCI6MjA2NDk2MDcwOX0.UoZFRPPKrS_q_h7OgVhPthdpi8ck7F1HfNQ3WLvLZxs';
@@ -429,7 +424,8 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentUser = null;
-        let isAdmin = false;
+        let userRole = null;
+        let isAuthorized = false;
 
         const loginScreen = document.getElementById('loginScreen');
         const dashboardScreen = document.getElementById('dashboardScreen');
@@ -445,8 +441,28 @@
         logoutBtn.addEventListener('click', handleLogout);
         facebookBtn.addEventListener('click', handleFacebookLogin);
 
-        function isAdminEmail(email) {
-            return ADMIN_EMAILS.includes(email.toLowerCase());
+        async function checkUserRole(userId) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('role')
+                    .eq('uid', userId)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching user role:', error);
+                    return null;
+                }
+
+                return data?.role || 'user';
+            } catch (error) {
+                console.error('Error checking user role:', error);
+                return null;
+            }
+        }
+
+        function isAuthorizedRole(role) {
+            return ALLOWED_ROLES.includes(role?.toLowerCase());
         }
 
         function showError(message) {
@@ -460,16 +476,24 @@
         async function checkAuth() {
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session && isAdminEmail(session.user.email)) {
+                if (session) {
                     currentUser = session.user;
-                    isAdmin = true;
-                    showDashboard();
-                    loadStats();
-                } else if (session) {
-                    // User is logged in but not an admin
-                    await supabaseClient.auth.signOut();
-                    showError('هذا الحساب غير مصرح له بالوصول لهذه اللوحة');
-                    showLogin();
+                    
+                    // Get user role from database
+                    const role = await checkUserRole(session.user.id);
+                    userRole = role;
+                    
+                    if (isAuthorizedRole(role)) {
+                        isAuthorized = true;
+                        showDashboard();
+                        loadStats();
+                        showNotification(`مرحباً ${role === 'admin' ? 'أيها المدير' : 'أيها المشرف'}!`, 'success');
+                    } else {
+                        // User is logged in but doesn't have admin/moderator role
+                        await supabaseClient.auth.signOut();
+                        showError(`هذا الحساب لا يملك صلاحيات الإدارة. دورك الحالي: ${role || 'مستخدم عادي'}`);
+                        showLogin();
+                    }
                 } else {
                     showLogin();
                 }
@@ -490,11 +514,6 @@
                 return;
             }
 
-            if (!isAdminEmail(email)) {
-                showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
-                return;
-            }
-
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
@@ -506,15 +525,20 @@
 
                 if (error) throw error;
 
-                if (isAdminEmail(data.user.email)) {
-                    currentUser = data.user;
-                    isAdmin = true;
-                    showNotification('مرحباً أيها المدير! تم تسجيل الدخول بنجاح', 'success');
+                currentUser = data.user;
+                
+                // Check user role from database
+                const role = await checkUserRole(data.user.id);
+                userRole = role;
+                
+                if (isAuthorizedRole(role)) {
+                    isAuthorized = true;
+                    showNotification(`مرحباً ${role === 'admin' ? 'أيها المدير' : 'أيها المشرف'}! تم تسجيل الدخول بنجاح`, 'success');
                     showDashboard();
                     loadStats();
                 } else {
                     await supabaseClient.auth.signOut();
-                    showError('هذا الحساب غير مصرح له بالوصول لهذه اللوحة');
+                    showError(`هذا الحساب لا يملك صلاحيات الإدارة. دورك الحالي: ${role || 'مستخدم عادي'}`);
                 }
 
             } catch (error) {
@@ -568,7 +592,8 @@
             try {
                 await supabaseClient.auth.signOut();
                 currentUser = null;
-                isAdmin = false;
+                userRole = null;
+                isAuthorized = false;
                 showLogin();
                 showNotification('تم تسجيل الخروج بنجاح', 'success');
             } catch (error) {
@@ -589,7 +614,7 @@
         }
 
         async function loadStats() {
-            if (!isAdmin) {
+            if (!isAuthorized) {
                 showNotification('غير مصرح لك بالوصول لهذه البيانات', 'error');
                 return;
             }
@@ -632,10 +657,10 @@
             }, 4000);
         }
 
-        // Admin functions with security checks
+        // Admin/Moderator functions with role-based security checks
         async function approveListingSecure(listingId) {
-            if (!isAdmin) {
-                showNotification('غير مصرح لك بهذا الإجراء', 'error');
+            if (!isAuthorized || !isAuthorizedRole(userRole)) {
+                showNotification('غير مصرح لك بهذا الإجراء - يتطلب صلاحيات مدير أو مشرف', 'error');
                 return false;
             }
 
@@ -658,8 +683,8 @@
         }
 
         async function rejectListingSecure(listingId, reason) {
-            if (!isAdmin) {
-                showNotification('غير مصرح لك بهذا الإجراء', 'error');
+            if (!isAuthorized || !isAuthorizedRole(userRole)) {
+                showNotification('غير مصرح لك بهذا الإجراء - يتطلب صلاحيات مدير أو مشرف', 'error');
                 return false;
             }
 
@@ -687,23 +712,36 @@
             console.log(`[ADMIN ACTION] ${currentUser?.email} - ${action} - Listing: ${listingId} - ${details} - Time: ${new Date().toISOString()}`);
         }
 
-        supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session && isAdminEmail(session.user.email)) {
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session) {
                 currentUser = session.user;
-                isAdmin = true;
-                showDashboard();
-                loadStats();
+                
+                // Check user role from database
+                const role = await checkUserRole(session.user.id);
+                userRole = role;
+                
+                if (isAuthorizedRole(role)) {
+                    isAuthorized = true;
+                    showDashboard();
+                    loadStats();
+                } else {
+                    await supabaseClient.auth.signOut();
+                    showError(`هذا الحساب لا يملك صلاحيات الإدارة. دورك الحالي: ${role || 'مستخدم عادي'}`);
+                    showLogin();
+                }
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
-                isAdmin = false;
+                userRole = null;
+                isAuthorized = false;
                 showLogin();
             }
         });
 
         // Console security message
         console.log('🔒 شوفي - نظام الإدارة الآمن');
-        console.log('⚠️ تحذير: هذه اللوحة مخصصة للمديرين المعتمدين فقط');
-        console.log('📧 المديرين المعتمدين:', ADMIN_EMAILS);
+        console.log('⚠️ تحذير: هذه اللوحة مخصصة للمديرين والمشرفين المعتمدين فقط');
+        console.log('👥 الأدوار المصرح لها:', ALLOWED_ROLES);
+        console.log('🔐 نظام التحكم: Role-Based Access Control (RBAC)');
     </script>
 </body>
 </html> 
