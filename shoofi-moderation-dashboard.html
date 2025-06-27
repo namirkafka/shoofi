@@ -555,14 +555,14 @@
             facebookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             try {
-                // Use your existing Facebook App configuration from iOS
+                // Configure Facebook OAuth to stay in web browser
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'facebook',
                     options: {
-                        redirectTo: window.location.href,
+                        redirectTo: window.location.origin + window.location.pathname,
                         queryParams: {
-                            // Use same Facebook App ID as iOS: 708876121645630
-                            client_id: '708876121645630'
+                            access_type: 'online',
+                            prompt: 'consent'
                         },
                         scopes: 'email public_profile'
                     }
@@ -578,7 +578,7 @@
                 
                 // Check if this is a Supabase configuration issue
                 if (error.message.includes('Provider') || error.message.includes('oauth')) {
-                    showError('خطأ في إعدادات فيسبوك. يرجى التأكد من تفعيل Facebook OAuth في Supabase');
+                    showError('خطأ في إعدادات فيسبوك. يرجى التأكد من تفعيل Facebook OAuth في Supabase Dashboard');
                 } else {
                     showError('خطأ في تسجيل الدخول بالفيسبوك: ' + error.message);
                 }
