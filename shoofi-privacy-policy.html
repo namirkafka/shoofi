@@ -253,6 +253,68 @@
             color: #ff6b6b;
             margin-left: 8px;
         }
+
+        .social-login {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .social-login .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .social-login .divider::before,
+        .social-login .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .social-login .divider span {
+            padding: 0 15px;
+        }
+
+        .facebook-btn {
+            width: 60px;
+            height: 60px;
+            background: #1877f2;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
+        }
+
+        .facebook-btn:hover {
+            background: #166fe5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(24, 119, 242, 0.4);
+        }
+
+        .facebook-btn:active {
+            transform: translateY(0);
+        }
+
+        .facebook-btn i {
+            margin: 0;
+        }
+
+        .social-login p {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -279,6 +341,16 @@
                     <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
                 </button>
             </form>
+
+            <div class="social-login">
+                <div class="divider">
+                    <span>أو</span>
+                </div>
+                <button id="facebookBtn" class="facebook-btn" type="button">
+                    <i class="fab fa-facebook-f"></i>
+                </button>
+                <p>تسجيل الدخول بالفيسبوك</p>
+            </div>
         </div>
     </div>
 
@@ -364,12 +436,14 @@
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
+        const facebookBtn = document.getElementById('facebookBtn');
         const errorMessage = document.getElementById('errorMessage');
         const notification = document.getElementById('notification');
 
         document.addEventListener('DOMContentLoaded', checkAuth);
         loginForm.addEventListener('submit', handleLogin);
         logoutBtn.addEventListener('click', handleLogout);
+        facebookBtn.addEventListener('click', handleFacebookLogin);
 
         function isAdminEmail(email) {
             return ADMIN_EMAILS.includes(email.toLowerCase());
@@ -449,6 +523,32 @@
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+            }
+        }
+
+        async function handleFacebookLogin() {
+            facebookBtn.disabled = true;
+            facebookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'facebook',
+                    options: {
+                        redirectTo: window.location.origin + '/shoofi-admin-dashboard.html'
+                    }
+                });
+
+                if (error) throw error;
+
+                // The actual login handling will be done by the auth state change listener
+                showNotification('جاري إعادة التوجيه للفيسبوك...', 'success');
+
+            } catch (error) {
+                console.error('Facebook login error:', error);
+                showError('خطأ في تسجيل الدخول بالفيسبوك: ' + error.message);
+            } finally {
+                facebookBtn.disabled = false;
+                facebookBtn.innerHTML = '<i class="fab fa-facebook-f"></i>';
             }
         }
 
@@ -594,4 +694,4 @@
         console.log('📧 المديرين المعتمدين:', ADMIN_EMAILS);
     </script>
 </body>
-</html>
+</html> 
