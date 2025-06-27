@@ -1085,57 +1085,134 @@
              }
          }
 
-         // Moderate listing (approve/reject/undo)
-         async function moderateListing(listingId, status) {
+         // Enhanced moderation functions with notifications
+         
+         // Approve listing with automatic notification
+         async function approveListing(listingId) {
              try {
-                 log(`Moderating listing ${listingId} to ${status}`);
+                 log(`Approving listing ${listingId}`);
+                 showStatus('جاري الموافقة على الإعلان...', 'info');
 
-                 const updateData = {
-                     moderation_status: status,
-                     moderated_by: currentUser.id,
-                     moderated_at: new Date().toISOString()
-                 };
-
-                 // If undoing, clear the moderated fields
-                 if (status === 'pending') {
-                     updateData.moderated_by = null;
-                     updateData.moderated_at = null;
-                 }
-
-                 const { error } = await supabase
-                     .from('listings')
-                     .update(updateData)
-                     .eq('id', listingId);
+                 const { data, error } = await supabase.rpc('approve_listing', {
+                     listing_id_param: listingId,
+                     moderator_id_param: currentUser.id
+                 });
 
                  if (error) {
-                     log('Error moderating listing: ' + error.message);
-                     showStatus('خطأ في تحديث الإعلان', 'error');
+                     throw error;
+                 }
+
+                 if (data) {
+                     log('Listing approved successfully with notification');
+                     showStatus('تم قبول الإعلان بنجاح ✅ - تم إرسال إشعار للمستخدم', 'success');
+                 } else {
+                     log('Listing approval failed');
+                     showStatus('فشل في الموافقة على الإعلان', 'error');
                      return;
                  }
-
-                 log('Listing moderated successfully');
                  
-                 // Show appropriate success message
-                 let message;
-                 if (status === 'approved') {
-                     message = 'تم قبول الإعلان بنجاح';
-                 } else if (status === 'rejected') {
-                     message = 'تم رفض الإعلان بنجاح';
-                 } else if (status === 'pending') {
-                     message = 'تم إرجاع الإعلان إلى قائمة الانتظار';
-                 }
-                 
-                 showStatus(message, 'success');
-                 
-                 // Reload current view
-                 const activeTab = document.querySelector('.tab-btn.active');
-                 const currentStatus = activeTab.dataset.status;
-                 loadListings(currentStatus);
-                 loadStats(); // Refresh stats
+                 // Reload current view and stats
+                 setTimeout(() => {
+                     const activeTab = document.querySelector('.tab-btn.active');
+                     const currentStatus = activeTab.dataset.status;
+                     loadListings(currentStatus);
+                     loadStats();
+                     hideStatus();
+                 }, 2000);
 
              } catch (error) {
-                 log('Exception moderating listing: ' + error.message);
-                 showStatus('خطأ في تحديث الإعلان', 'error');
+                 log('Exception approving listing: ' + error.message);
+                 showStatus('خطأ في الموافقة على الإعلان: ' + error.message, 'error');
+             }
+         }
+
+         // Reject listing with automatic notification
+         async function rejectListing(listingId, reason = 'لا يتوافق مع سياسة المنصة') {
+             try {
+                 log(`Rejecting listing ${listingId} with reason: ${reason}`);
+                 showStatus('جاري رفض الإعلان...', 'info');
+
+                 const { data, error } = await supabase.rpc('reject_listing', {
+                     listing_id_param: listingId,
+                     reason_param: reason,
+                     moderator_id_param: currentUser.id
+                 });
+
+                 if (error) {
+                     throw error;
+                 }
+
+                 if (data) {
+                     log('Listing rejected successfully with notification');
+                     showStatus('تم رفض الإعلان بنجاح ❌ - تم إرسال إشعار للمستخدم', 'success');
+                 } else {
+                     log('Listing rejection failed');
+                     showStatus('فشل في رفض الإعلان', 'error');
+                     return;
+                 }
+                 
+                 // Reload current view and stats
+                 setTimeout(() => {
+                     const activeTab = document.querySelector('.tab-btn.active');
+                     const currentStatus = activeTab.dataset.status;
+                     loadListings(currentStatus);
+                     loadStats();
+                     hideStatus();
+                 }, 2000);
+
+             } catch (error) {
+                 log('Exception rejecting listing: ' + error.message);
+                 showStatus('خطأ في رفض الإعلان: ' + error.message, 'error');
+             }
+         }
+
+         // Undo moderation with automatic notification
+         async function undoModeration(listingId) {
+             try {
+                 log(`Undoing moderation for listing ${listingId}`);
+                 showStatus('جاري إلغاء الإجراء...', 'info');
+
+                 const { data, error } = await supabase.rpc('undo_moderation', {
+                     listing_id_param: listingId,
+                     moderator_id_param: currentUser.id
+                 });
+
+                 if (error) {
+                     throw error;
+                 }
+
+                 if (data) {
+                     log('Moderation undone successfully with notification');
+                     showStatus('تم إلغاء الإجراء بنجاح ↩️ - تم إرسال إشعار للمستخدم', 'success');
+                 } else {
+                     log('Undo moderation failed');
+                     showStatus('فشل في إلغاء الإجراء', 'error');
+                     return;
+                 }
+                 
+                 // Reload current view and stats
+                 setTimeout(() => {
+                     const activeTab = document.querySelector('.tab-btn.active');
+                     const currentStatus = activeTab.dataset.status;
+                     loadListings(currentStatus);
+                     loadStats();
+                     hideStatus();
+                 }, 2000);
+
+             } catch (error) {
+                 log('Exception undoing moderation: ' + error.message);
+                 showStatus('خطأ في إلغاء الإجراء: ' + error.message, 'error');
+             }
+         }
+
+         // Legacy function for backward compatibility
+         async function moderateListing(listingId, status, reason = null) {
+             if (status === 'approved') {
+                 await approveListing(listingId);
+             } else if (status === 'rejected') {
+                 await rejectListing(listingId, reason || 'لا يتوافق مع سياسة المنصة');
+             } else if (status === 'pending') {
+                 await undoModeration(listingId);
              }
          }
 
