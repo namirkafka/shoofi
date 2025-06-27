@@ -475,14 +475,8 @@
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Admin emails list
-        const adminEmails = [
-            'namirkhabaza@gmail.com',
-            'admin@shoofi.com',
-            'moderator@shoofi.com'
-        ];
-
         let currentUser = null;
+        let userProfile = null;
         let isAuthorized = false;
         let authInitialized = false;
 
@@ -496,8 +490,28 @@
         const errorMessage = document.getElementById('errorMessage');
         const notification = document.getElementById('notification');
 
-        function isAdminEmail(email) {
-            return adminEmails.includes(email?.toLowerCase());
+        async function checkUserRole(userId) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('role, full_name, email')
+                    .eq('id', userId)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching user profile:', error);
+                    return null;
+                }
+
+                return data;
+            } catch (error) {
+                console.error('Error checking user role:', error);
+                return null;
+            }
+        }
+
+        function isAdminOrModerator(role) {
+            return role === 'admin' || role === 'moderator';
         }
 
         function showError(message) {
@@ -539,7 +553,12 @@
         function showDashboard() {
             loginScreen.style.display = 'none';
             dashboardScreen.classList.add('show');
-            document.getElementById('userEmail').textContent = currentUser.email;
+            
+            // Show user info with role
+            const userInfo = userProfile ? 
+                `${userProfile.full_name || currentUser.email} (${userProfile.role === 'admin' ? 'مدير' : 'مشرف'})` : 
+                currentUser.email;
+            document.getElementById('userEmail').textContent = userInfo;
         }
 
         async function loadStats() {
@@ -589,7 +608,7 @@
                 
                 if (hasOAuthParams) {
                     console.log('OAuth redirect detected, processing...');
-                    showLogin(); // Show login screen while processing
+                    showProcessing(); // Show processing state
                     
                     // Wait a bit for Supabase to process the OAuth callback
                     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -607,21 +626,24 @@
                 if (session && session.user) {
                     console.log('Found session for:', session.user.email);
                     
-                    if (isAdminEmail(session.user.email)) {
+                    // Check user role from database
+                    userProfile = await checkUserRole(session.user.id);
+                    
+                    if (userProfile && isAdminOrModerator(userProfile.role)) {
                         currentUser = session.user;
                         isAuthorized = true;
                         showDashboard();
                         loadStats();
-                        showNotification('مرحباً ' + (session.user.user_metadata?.full_name || session.user.email), 'success');
+                        showNotification('مرحباً ' + (userProfile.full_name || session.user.email), 'success');
                         
                         // Clean up URL parameters
                         if (hasOAuthParams) {
                             window.history.replaceState({}, document.title, window.location.pathname);
                         }
                     } else {
-                        console.log('User not authorized, signing out');
+                        console.log('User not authorized - role:', userProfile?.role || 'not found');
                         await supabaseClient.auth.signOut();
-                        showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
+                        showError('ليس لديك صلاحية للوصول إلى لوحة الإدارة. يجب أن تكون مدير أو مشرف.');
                         showLogin();
                     }
                 } else {
@@ -639,18 +661,22 @@
             console.log('Auth state change:', event, session?.user?.email);
             
             if (event === 'SIGNED_IN' && session) {
-                if (isAdminEmail(session.user.email)) {
+                // Check user role from database
+                userProfile = await checkUserRole(session.user.id);
+                
+                if (userProfile && isAdminOrModerator(userProfile.role)) {
                     currentUser = session.user;
                     isAuthorized = true;
                     showDashboard();
                     loadStats();
-                    showNotification('مرحباً ' + (session.user.user_metadata?.full_name || session.user.email), 'success');
+                    showNotification('مرحباً ' + (userProfile.full_name || session.user.email), 'success');
                 } else {
                     await supabaseClient.auth.signOut();
-                    showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
+                    showError('ليس لديك صلاحية للوصول إلى لوحة الإدارة. يجب أن تكون مدير أو مشرف.');
                 }
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
+                userProfile = null;
                 isAuthorized = false;
                 showLogin();
             }
@@ -721,11 +747,6 @@
                 return;
             }
 
-            if (!isAdminEmail(email)) {
-                showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
-                return;
-            }
-
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
@@ -766,8 +787,8 @@
         googleBtn.addEventListener('click', handleGoogleLogin);
 
         // Console security message
-        console.log('🔒 شوفي - نظام الإدارة الآمن (Google Only)');
-        console.log('📧 البريد المصرح: namirkhabaza@gmail.com');
+        console.log('🔒 شوفي - نظام الإدارة الآمن (Database Role-Based)');
+        console.log('👥 الأدوار المصرحة: admin, moderator');
     </script>
 </body>
 </html> 
