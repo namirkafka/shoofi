@@ -531,10 +531,16 @@
             facebookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             try {
+                // Use your existing Facebook App configuration from iOS
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'facebook',
                     options: {
-                        redirectTo: window.location.origin + '/shoofi-admin-dashboard.html'
+                        redirectTo: window.location.href,
+                        queryParams: {
+                            // Use same Facebook App ID as iOS: 708876121645630
+                            client_id: '708876121645630'
+                        },
+                        scopes: 'email public_profile'
                     }
                 });
 
@@ -545,7 +551,13 @@
 
             } catch (error) {
                 console.error('Facebook login error:', error);
-                showError('خطأ في تسجيل الدخول بالفيسبوك: ' + error.message);
+                
+                // Check if this is a Supabase configuration issue
+                if (error.message.includes('Provider') || error.message.includes('oauth')) {
+                    showError('خطأ في إعدادات فيسبوك. يرجى التأكد من تفعيل Facebook OAuth في Supabase');
+                } else {
+                    showError('خطأ في تسجيل الدخول بالفيسبوك: ' + error.message);
+                }
             } finally {
                 facebookBtn.disabled = false;
                 facebookBtn.innerHTML = '<i class="fab fa-facebook-f"></i>';
