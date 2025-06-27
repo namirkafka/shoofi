@@ -397,35 +397,49 @@
             showDashboard();
         }
 
-        // Google login
-        googleBtn.addEventListener('click', async () => {
-            log('Starting Google login...');
-            
-            googleBtn.disabled = true;
-            googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوجيه...';
-            
-            try {
-                const { error } = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.href
-                    }
-                });
+                 // Google login
+         googleBtn.addEventListener('click', async () => {
+             log('Starting Google login...');
+             
+             googleBtn.disabled = true;
+             googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوجيه...';
+             
+             try {
+                 // Use a simpler redirect approach - redirect to same page without complex URL handling
+                 const { error } = await supabase.auth.signInWithOAuth({
+                     provider: 'google',
+                     options: {
+                         redirectTo: window.location.origin + window.location.pathname,
+                         queryParams: {
+                             prompt: 'select_account'
+                         }
+                     }
+                 });
 
-                if (error) {
-                    throw error;
-                }
+                 if (error) {
+                     throw error;
+                 }
 
-                log('OAuth request sent successfully');
-                
-            } catch (error) {
-                log('Google login error: ' + error.message);
-                showStatus('خطأ في تسجيل الدخول: ' + error.message, 'error');
-                
-                googleBtn.disabled = false;
-                googleBtn.innerHTML = '<i class="fab fa-google"></i> تسجيل الدخول بـ Google';
-            }
-        });
+                 log('OAuth request sent successfully');
+                 
+                 // Add timeout to reset button if redirect doesn't happen
+                 setTimeout(() => {
+                     if (googleBtn.disabled) {
+                         log('OAuth redirect timeout - resetting button');
+                         googleBtn.disabled = false;
+                         googleBtn.innerHTML = '<i class="fab fa-google"></i> تسجيل الدخول بـ Google';
+                         showStatus('انتهت مهلة التوجيه. حاول مرة أخرى.', 'error');
+                     }
+                 }, 10000); // 10 second timeout
+                 
+             } catch (error) {
+                 log('Google login error: ' + error.message);
+                 showStatus('خطأ في تسجيل الدخول: ' + error.message, 'error');
+                 
+                 googleBtn.disabled = false;
+                 googleBtn.innerHTML = '<i class="fab fa-google"></i> تسجيل الدخول بـ Google';
+             }
+         });
 
         // Logout
         logoutBtn.addEventListener('click', async () => {
@@ -446,14 +460,26 @@
             }
         });
 
-        // Initialize
-        async function init() {
-            log('Initializing admin dashboard...');
-            
-            // Check for existing session
-            const { data: { session } } = await supabase.auth.getSession();
-            await handleAuth(session);
-        }
+                 // Initialize
+         async function init() {
+             log('Initializing admin dashboard...');
+             
+             // Check if we're returning from OAuth
+             const urlParams = new URLSearchParams(window.location.search);
+             const fragment = window.location.hash;
+             
+             if (urlParams.has('code') || fragment.includes('access_token') || fragment.includes('error')) {
+                 log('OAuth redirect detected - processing...');
+                 showStatus('معالجة تسجيل الدخول...', 'success');
+                 
+                 // Wait a bit for Supabase to process the OAuth callback
+                 await new Promise(resolve => setTimeout(resolve, 3000));
+             }
+             
+             // Check for existing session
+             const { data: { session } } = await supabase.auth.getSession();
+             await handleAuth(session);
+         }
 
         // Start
         init();
