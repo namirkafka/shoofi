@@ -466,7 +466,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Clean start - no Facebook references
+        // Clean start - Google Sign-In Only
         console.log('🚀 شوفي - لوحة الإدارة (Google Sign-In Only)');
         
         // Supabase Configuration
@@ -475,7 +475,7 @@
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Admin emails list (for additional security)
+        // Admin emails list
         const adminEmails = [
             'namirkhabaza@gmail.com',
             'admin@shoofi.com',
@@ -484,6 +484,7 @@
 
         let currentUser = null;
         let isAuthorized = false;
+        let authInitialized = false;
 
         // DOM elements
         const loginScreen = document.getElementById('loginScreen');
@@ -494,12 +495,6 @@
         const googleBtn = document.getElementById('googleBtn');
         const errorMessage = document.getElementById('errorMessage');
         const notification = document.getElementById('notification');
-
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', checkAuth);
-        loginForm.addEventListener('submit', handleLogin);
-        logoutBtn.addEventListener('click', handleLogout);
-        googleBtn.addEventListener('click', handleGoogleLogin);
 
         function isAdminEmail(email) {
             return adminEmails.includes(email?.toLowerCase());
@@ -513,121 +508,23 @@
             }, 5000);
         }
 
-        async function checkAuth() {
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session && isAdminEmail(session.user.email)) {
-                    currentUser = session.user;
-                    isAuthorized = true;
-                    showDashboard();
-                    loadStats();
-                } else {
-                    if (session) {
-                        await supabaseClient.auth.signOut();
-                        showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
-                    }
-                    showLogin();
-                }
-            } catch (error) {
-                console.error('Auth check error:', error);
-                showLogin();
-            }
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
             
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            if (!email || !password) {
-                showError('يرجى إدخال البريد الإلكتروني وكلمة المرور');
-                return;
-            }
-
-            if (!isAdminEmail(email)) {
-                showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
-                return;
-            }
-
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-                if (error) throw error;
-
-                currentUser = data.user;
-                isAuthorized = true;
-                
-                showNotification('مرحباً! تم تسجيل الدخول بنجاح', 'success');
-                showDashboard();
-                loadStats();
-
-            } catch (error) {
-                console.error('Login error:', error);
-                showError('خطأ في تسجيل الدخول: ' + error.message);
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
-            }
-        }
-
-        async function handleGoogleLogin() {
-            googleBtn.disabled = true;
-            googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.origin + window.location.pathname,
-                        queryParams: {
-                            access_type: 'online',
-                            prompt: 'select_account'
-                        },
-                        scopes: 'email profile openid'
-                    }
-                });
-
-                if (error) throw error;
-
-                showNotification('جاري إعادة التوجيه لـ Google...', 'success');
-
-            } catch (error) {
-                console.error('Google login error:', error);
-                
-                if (error.message.includes('Provider') || error.message.includes('oauth')) {
-                    showError('خطأ في إعدادات Google. يرجى التأكد من تفعيل Google OAuth في Supabase Dashboard');
-                } else {
-                    showError('خطأ في تسجيل الدخول بـ Google: ' + error.message);
-                }
-            } finally {
-                googleBtn.disabled = false;
-                googleBtn.innerHTML = '<i class="fab fa-google"></i>';
-            }
-        }
-
-        async function handleLogout() {
-            try {
-                await supabaseClient.auth.signOut();
-                currentUser = null;
-                isAuthorized = false;
-                showLogin();
-                showNotification('تم تسجيل الخروج بنجاح', 'success');
-            } catch (error) {
-                console.error('Logout error:', error);
-                showNotification('خطأ في تسجيل الخروج', 'error');
-            }
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
         }
 
         function showLogin() {
             loginScreen.style.display = 'flex';
             dashboardScreen.classList.remove('show');
+            
+            // Reset Google button
+            googleBtn.disabled = false;
+            googleBtn.innerHTML = '<i class="fab fa-google"></i>';
         }
 
         function showDashboard() {
@@ -669,29 +566,62 @@
             }
         }
 
-        function showNotification(message, type = 'success') {
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
+        // Initialize authentication
+        async function initAuth() {
+            if (authInitialized) return;
+            authInitialized = true;
+
+            console.log('Initializing auth...');
+
+            try {
+                // Check for existing session
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                
+                if (error) {
+                    console.error('Session error:', error);
+                    showLogin();
+                    return;
+                }
+
+                if (session && session.user) {
+                    console.log('Found session for:', session.user.email);
+                    
+                    if (isAdminEmail(session.user.email)) {
+                        currentUser = session.user;
+                        isAuthorized = true;
+                        showDashboard();
+                        loadStats();
+                        showNotification('مرحباً ' + (session.user.user_metadata?.full_name || session.user.email), 'success');
+                    } else {
+                        console.log('User not authorized, signing out');
+                        await supabaseClient.auth.signOut();
+                        showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
+                        showLogin();
+                    }
+                } else {
+                    console.log('No session found');
+                    showLogin();
+                }
+            } catch (error) {
+                console.error('Auth initialization error:', error);
+                showLogin();
+            }
         }
 
-        // Auth state change listener
+        // Auth state change listener - simplified
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth state change:', event, session?.user?.email);
+            
             if (event === 'SIGNED_IN' && session) {
                 if (isAdminEmail(session.user.email)) {
                     currentUser = session.user;
                     isAuthorized = true;
                     showDashboard();
                     loadStats();
-                    showNotification('مرحباً! تم تسجيل الدخول بنجاح', 'success');
+                    showNotification('مرحباً ' + (session.user.user_metadata?.full_name || session.user.email), 'success');
                 } else {
                     await supabaseClient.auth.signOut();
                     showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
-                    showLogin();
                 }
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
@@ -699,6 +629,92 @@
                 showLogin();
             }
         });
+
+        // Google login handler
+        async function handleGoogleLogin() {
+            console.log('Starting Google login...');
+            
+            googleBtn.disabled = true;
+            googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                console.log('Redirecting to Google...');
+                
+            } catch (error) {
+                console.error('Google login error:', error);
+                showError('خطأ في تسجيل الدخول بـ Google: ' + error.message);
+                
+                googleBtn.disabled = false;
+                googleBtn.innerHTML = '<i class="fab fa-google"></i>';
+            }
+        }
+
+        // Regular login handler
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('يرجى إدخال البريد الإلكتروني وكلمة المرور');
+                return;
+            }
+
+            if (!isAdminEmail(email)) {
+                showError('هذا البريد الإلكتروني غير مصرح له بالوصول للوحة الإدارة');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // Success handled by auth state change listener
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('خطأ في تسجيل الدخول: ' + error.message);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+            }
+        }
+
+        // Logout handler
+        async function handleLogout() {
+            try {
+                await supabaseClient.auth.signOut();
+                showNotification('تم تسجيل الخروج بنجاح', 'success');
+            } catch (error) {
+                console.error('Logout error:', error);
+                showNotification('خطأ في تسجيل الخروج', 'error');
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', initAuth);
+        loginForm.addEventListener('submit', handleLogin);
+        logoutBtn.addEventListener('click', handleLogout);
+        googleBtn.addEventListener('click', handleGoogleLogin);
 
         // Console security message
         console.log('🔒 شوفي - نظام الإدارة الآمن (Google Only)');
