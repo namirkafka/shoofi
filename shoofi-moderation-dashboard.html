@@ -95,27 +95,7 @@
             border: 1px solid #17a2b8;
         }
 
-        .warning-box {
-            background: rgba(255, 193, 7, 0.2);
-            border: 1px solid #ffc107;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-            color: #fff;
-        }
 
-        .warning-box i {
-            color: #ffc107;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-
-        .warning-box p {
-            margin: 8px 0;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
 
         .dashboard {
             display: none;
@@ -376,13 +356,7 @@
         <div class="login-box">
             <h2><i class="fas fa-shield-alt"></i> دخول المدير</h2>
             
-            <div class="warning-box">
-                <i class="fas fa-info-circle"></i>
-                <p><strong>معلومات مهمة:</strong></p>
-                <p>• هذه اللوحة مخصصة للإداريين والمشرفين المعتمدين</p>
-                <p>• إذا كانت هذه أول مرة تسجل دخولك، سيتم إنشاء حساب جديد لك</p>
-                <p>• لطلب صلاحيات الإدارة، تواصل مع: <strong>admin@shoofi.com</strong></p>
-            </div>
+
             
             <div id="status" class="status" style="display: none;"></div>
             
@@ -571,9 +545,30 @@
              const roleText = userProfile?.role === 'admin' ? 'مدير' : 'مشرف';
              userInfo.textContent = `مرحباً ${userProfile?.full_name || currentUser?.email} (${roleText})`;
              
+             // Test database connection
+             testDatabaseConnection();
+             
              loadStats();
              loadListings('pending'); // Load pending listings by default
              initializeTabs();
+         }
+
+         // Test database connection
+         async function testDatabaseConnection() {
+             try {
+                 log('Testing database connection...');
+                 const { data, error } = await supabase
+                     .from('listings')
+                     .select('count(*)', { count: 'exact', head: true });
+                 
+                 if (error) {
+                     log('Database connection test failed: ' + error.message);
+                 } else {
+                     log('Database connection successful');
+                 }
+             } catch (error) {
+                 log('Database connection exception: ' + error.message);
+             }
          }
 
          // Initialize tab functionality
@@ -637,6 +632,7 @@
 
              try {
                  log('Loading listings with status: ' + status);
+                 log('Supabase URL: ' + SUPABASE_URL);
 
                  let query = supabase
                      .from('listings')
@@ -650,7 +646,7 @@
                          moderation_status,
                          created_at,
                          user_id,
-                         profiles!inner(full_name, email)
+                         profiles(full_name, email)
                      `)
                      .order('created_at', { ascending: false });
 
@@ -658,16 +654,46 @@
                      query = query.eq('moderation_status', status);
                  }
 
-                 const { data, error } = await query;
+                 let { data, error } = await query;
+
+                 // If profiles join fails, try without profiles
+                 if (error) {
+                     log('Error with profiles join, trying without: ' + error.message);
+                     
+                     let simpleQuery = supabase
+                         .from('listings')
+                         .select(`
+                             id,
+                             title,
+                             description,
+                             price,
+                             category,
+                             location,
+                             moderation_status,
+                             created_at,
+                             user_id
+                         `)
+                         .order('created_at', { ascending: false });
+
+                     if (status !== 'all') {
+                         simpleQuery = simpleQuery.eq('moderation_status', status);
+                     }
+
+                     const result = await simpleQuery;
+                     data = result.data;
+                     error = result.error;
+                 }
 
                  if (error) {
                      log('Error loading listings: ' + error.message);
-                     container.innerHTML = '<div class="no-listings"><i class="fas fa-exclamation-triangle"></i><br>خطأ في تحميل الإعلانات</div>';
+                     container.innerHTML = '<div class="no-listings"><i class="fas fa-exclamation-triangle"></i><br>خطأ في تحميل الإعلانات<br><small>' + error.message + '</small></div>';
                      return;
                  }
 
+                 log('Query result - data length: ' + (data ? data.length : 'null'));
+                 
                  if (!data || data.length === 0) {
-                     container.innerHTML = '<div class="no-listings"><i class="fas fa-inbox"></i><br>لا توجد إعلانات</div>';
+                     container.innerHTML = '<div class="no-listings"><i class="fas fa-inbox"></i><br>لا توجد إعلانات<br><small>Status filter: ' + status + '</small></div>';
                      return;
                  }
 
@@ -956,8 +982,8 @@
                  log('OAuth redirect detected - processing...');
                  showStatus('معالجة تسجيل الدخول...', 'success');
                  
-                 // Wait a bit for Supabase to process the OAuth callback
-                 await new Promise(resolve => setTimeout(resolve, 3000));
+                 // Brief wait for Supabase to process the OAuth callback
+                 await new Promise(resolve => setTimeout(resolve, 1000));
              }
              
              try {
