@@ -405,11 +405,18 @@
              googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوجيه...';
              
              try {
-                 // Use a simpler redirect approach - redirect to same page without complex URL handling
+                 // Auto-detect the correct redirect URL
+                 const isLivesite = window.location.hostname === 'shoofi.co.uk';
+                 const redirectUrl = isLivesite 
+                     ? 'https://shoofi.co.uk/shoofi-admin-simple.html'
+                     : window.location.href;
+                 
+                 log('Using redirect URL: ' + redirectUrl);
+                 
                  const { error } = await supabase.auth.signInWithOAuth({
                      provider: 'google',
                      options: {
-                         redirectTo: window.location.origin + window.location.pathname,
+                         redirectTo: redirectUrl,
                          queryParams: {
                              prompt: 'select_account'
                          }
